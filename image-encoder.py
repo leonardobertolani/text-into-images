@@ -1,74 +1,40 @@
 from PIL import Image
 from bitarray import bitarray
+from math import ceil, sqrt
 
 
-def text_to_bits(text):
-    bits = bitarray()
-    bits.frombytes(text.encode('utf-8'))
-    return bits
-
-
-def read_text_file_bits(file_path):
+def text_in_bitarray(file_path):
     with open(file_path, 'r') as file:
-        # Leggi il contenuto del file di testo
         text_content = file.read()
 
-    # Converti il testo in bit
-    bits = text_to_bits(text_content)
+    # Convert it into a bitarray object
+    bits = bitarray()
+    bits.frombytes(text_content.encode('utf-8'))
 
     return bits
 
 
-# Esempio di utilizzo
-file_path = 'testo.txt'  # Sostituisci con il percorso del tuo file di testo
-bits = read_text_file_bits(file_path)
 
-# Stampa i primi 64 bit a titolo di esempio
-print(bits[67:])
-print(len(bits))
+def bitarray_in_image(image, height, width, bits):
 
+    for y in range(height):
+        for x in range(width):
 
-
+            actual_image_index = y * width + x
+            image.putpixel((x, y), int(bits[actual_image_index]))
 
 
 
-# Stringa di bit di esempio (8x8)
-bit_string = "00110000" \
-             "01111000" \
-             "10001100" \
-             "10001100" \
-             "10011100" \
-             "01111100" \
-             "00100100" \
-             "00011000"
 
-# Dimensioni dell'immagine
-'''
-width = int(len(bits)/10)
-height = int(len(bits)/width) + len(bits) % width
-'''
-width = 217
-height = 217
+file_path = 'text.txt'
+bits = text_in_bitarray(file_path)           # Getting the bits
 
-# Creazione di un oggetto immagine
+width = height = ceil(sqrt(len(bits)))          # Setting width and height based on the number of bits
+bits.extend([0] * (width*height - len(bits)))   # Extending the bits array so that bits and image have same dimension
+
 img = Image.new('1', (width, height))
+bitarray_in_image(img, height, width, bits)   # Getting the image
 
-# Iterazione attraverso la stringa di bit e impostazione dei pixel dell'immagine
-for y in range(height):
-    for x in range(width):
-        if len(bits) > (y * width + x):
-            # Estrai il bit corrispondente dalla stringa di bit
-            bit = int(bits[y * width + x])
-            # Imposta il pixel nell'immagine
-            img.putpixel((x, y), bit)
-        else:
-            img.putpixel((x, y), 0)
 
-# Salva l'immagine
-img.save("image.png", compress_level=0)
-
-# Mostra l'immagine
+img.save("image.png", compress_level=0)   # No compression so that we don't lose data
 img.show()
-
-
-
